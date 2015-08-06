@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Calculadora de font-size responsivo</title>
+
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.css">
+  <style type="text/css">
+    * {
+      margin: 0;
+      padding: 0;
+      border: none;
+    }
+    body {
+      font-family: sans-serif;
+      margin: 30px;
+    }
+    form {
+      margin: 10px 0;
+    }
+    fieldset {
+      margin: 10px 0;
+    }
+    input {
+      padding: 5px;
+      border: 1px solid #ccc;
+      width: 70px;
+    }
+    input[name=breakpoint] {
+      margin-right: 10px;
+    }
+    .button {
+      width: 20px;
+      height: 20px;
+      border: 1px solid #aaa;
+      background-color: #ccc;
+      cursor: pointer;
+      border-radius: 100%;
+      font-weight: bold;
+      display: inline-block;
+      text-align: center;
+    }
+    .minus:after {
+      content: '-';
+    }
+    .plus:after {
+      content: '+';
+    }
+    .calculate {
+      display: inline-block;
+      padding: 10px 15px;
+      width: auto;
+      height: auto;
+      border-radius: 0;
+      margin: 20px 0;
+    }
+    #css {
+      border: 1px solid #bbb;
+      background-color: #eee;
+      padding: 30px;
+    }
+  </style>
+
+</head>
+<body>
+
+  <h1>Calculadora de font-size responsivo</h1>
+  <a href="https://medium.com/@euharrison/31049e106fdb">https://medium.com/@euharrison/31049e106fdb</a>
+
+  <form>
+    <fieldset>
+      breakpoint: <input type="number" name="breakpoint" value="320">
+      font-size: <input type="number" name="fontSize" value="16">
+      <div class="button minus"></div>
+    </fieldset>
+    <fieldset>
+      breakpoint: <input type="number" name="breakpoint" value="768">
+      font-size: <input type="number" name="fontSize" value="18">
+      <div class="button minus"></div>
+    </fieldset>
+    <fieldset>
+      breakpoint: <input type="number" name="breakpoint" value="1360">
+      font-size: <input type="number" name="fontSize" value="22">
+      <div class="button minus"></div>
+    </fieldset>
+    <fieldset>
+      breakpoint: <input type="number" name="breakpoint" value="1920">
+      font-size: <input type="number" name="fontSize" value="30">
+      <div class="button minus"></div>
+    </fieldset>
+  </form>
+  <div class="button plus"></div>
+  <br>
+  <div class="button calculate">CALCULATE</div> 
+
+  <div id="graph"></div>
+  <pre><div id="css"></div></pre>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.min.js"></script>
+
+  <script>
+
+    var graph = Morris.Line({
+      element: 'graph',
+      xkey: 'windowWidth',
+      ykeys: ['fontSize'],
+      labels: ['font-size'],
+      xLabelFormat: function (x) { return x.src.windowWidth+'px'; },
+      yLabelFormat: function (y) { return y+'px'; },
+      parseTime: false,
+    });
+
+
+    function setupMinus() {
+      $('.minus').click(function() {
+        $(this).parent().remove();
+      });
+    }
+    setupMinus();
+
+    $('.plus').click(function() {
+      var fieldset = '';
+      fieldset += '<fieldset> ';
+      fieldset += 'breakpoint: <input type="number" name="breakpoint" value="1920"> ';
+      fieldset += 'font-size: <input type="number" name="fontSize" value="30"> ';
+      fieldset += '<div class="button minus"></div> ';
+      fieldset += '</fieldset>';
+      $('form').append(fieldset);
+      setupMinus();
+    });
+
+    $('.calculate').click(calculate);
+    calculate();
+
+    function calculate() {
+      var equacoes = [];
+
+      // Input
+      var breakpoints = [];
+      var fontSizes =       [];
+      $('fieldset').each(function(){
+        breakpoints.push( parseInt($('[name=breakpoint]', this).val()) );
+        fontSizes.push( parseInt($('[name=fontSize]', this).val()) );
+      })
+
+      // Equacoes
+      for (var i = 0; i < breakpoints.length-1; i++) {
+        // y = ax + b
+        // font-size = a(vw) + b
+        var x1 = breakpoints[i];
+        var x2 = breakpoints[i+1];
+        var y1 = fontSizes[i];
+        var y2 = fontSizes[i+1];
+
+        var a = (y2-y1) / (x2-x1);
+        var b = (x2*y1 - x1*y2) / (x2 - x1);
+
+        equacoes[i] = {
+          a: a,
+          b: b,
+          minWidth: x1,
+          maxWidth: x2,
+        }
+      };
+
+
+      // Graph
+      var minWidth = breakpoints[0];
+      var maxWidth = breakpoints[breakpoints.length-1];
+      var step = 20;
+      var totalSteps = (maxWidth-minWidth)/step + 1;
+
+      var data = [];
+      for (var i = 0; i < totalSteps; i++) {
+        var windowWidth = minWidth+(i*step);
+        var equacao = getEquacao(windowWidth);
+        data[i] = {
+          windowWidth: windowWidth,
+          fontSize: equacao.a*windowWidth + equacao.b,
+        };
+      };
+      graph.setData(data);
+
+      function getEquacao(windowWidth) {
+        for (var i = 0; i < equacoes.length; i++) {
+          if (windowWidth < equacoes[i].maxWidth) {
+            return equacoes[i];
+          }
+        };
+        return equacoes[equacoes.length-1];
+      }
+
+
+      // CSS
+      // no font-size, multiplicar por 100 pois a unidade vw usa valores de 0-100, ao invés de 0-1
+      var css = '';
+      css += 'font-size: calc('+(equacoes[0].a*100)+'vw + '+equacoes[0].b+'px);\n\n'; 
+      for (var i = 1; i < equacoes.length; i++) {
+        css += '@media (min-width: '+equacoes[i].minWidth+'px) {\n';
+        css += '  font-size: calc('+(equacoes[i].a*100)+'vw + '+equacoes[i].b+'px);\n';
+        css += '}\n';
+      }
+      css += '@media (min-width: '+breakpoints[breakpoints.length-1]+'px) {\n';
+      css += '  font-size: '+fontSizes[fontSizes.length-1]+'px;\n';
+      css += '}\n';
+      document.getElementById('css').innerHTML = css;
+    }
+
+  </script>
+
+</body>
+</html>
