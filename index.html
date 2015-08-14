@@ -14,6 +14,9 @@
       font-family: sans-serif;
       margin: 30px;
     }
+    p {
+      margin: 16px 0;
+    }
     form {
       margin: 10px 0;
     }
@@ -63,30 +66,55 @@
 </head>
 <body>
 
-  <h1>Calculadora de font-size responsivo</h1>
+  <h1>Tamanho responsivo para CSS</h1>
   <p>
-  Para entender melhor o funcionamento, leia em: <a href="https://medium.com/@euharrison/trigonometria-do-font-size-a104c95fa9a">https://medium.com/@euharrison/trigonometria-do-font-size-a104c95fa9a</a>
+  Para entender melhor o funcionamento, leia <a href="https://medium.com/@euharrison/trigonometria-do-font-size-a104c95fa9a">https://medium.com/@euharrison/trigonometria-do-font-size-a104c95fa9a</a>
   </p>
+  <br>
 
+
+  <h2>Função para sass</h2>
+  <p><pre>
+@function calc-responsive($value1, $width1, $value2, $width2) {
+  $x1: $width1;
+  $x2: $width2;
+  $y1: $value1;
+  $y2: $value2;
+  $a: ($y2 - $y1) / ($x2 - $x1);
+  $b: ($x2 * $y1 - $x1 * $y2) / ($x2 - $x1);
+  @return calc(#{$a*100vw} + #{$b*1px});
+}
+</pre></p>
+  <p>Aplicando, teremos:</p>
+  <pre>
+body {
+  font-size: calc-responsive(16, 320, 30, 1920);
+}
+</pre>
+  <br>
+  <br>
+
+  <h2>Calculadora</h2>
+  <p>Útil para analisar o gráfico que gera e criar breakpoints</p>
   <form>
     <fieldset>
-      breakpoint: <input type="number" name="breakpoint" value="320">
       font-size: <input type="number" name="fontSize" value="16">
+      breakpoint: <input type="number" name="breakpoint" value="320">
       <div class="button minus"></div>
     </fieldset>
     <fieldset>
-      breakpoint: <input type="number" name="breakpoint" value="768">
       font-size: <input type="number" name="fontSize" value="18">
+      breakpoint: <input type="number" name="breakpoint" value="768">
       <div class="button minus"></div>
     </fieldset>
     <fieldset>
-      breakpoint: <input type="number" name="breakpoint" value="1360">
       font-size: <input type="number" name="fontSize" value="22">
+      breakpoint: <input type="number" name="breakpoint" value="1360">
       <div class="button minus"></div>
     </fieldset>
     <fieldset>
-      breakpoint: <input type="number" name="breakpoint" value="1920">
       font-size: <input type="number" name="fontSize" value="30">
+      breakpoint: <input type="number" name="breakpoint" value="1920">
       <div class="button minus"></div>
     </fieldset>
   </form>
@@ -124,8 +152,8 @@
     $('.plus').click(function() {
       var fieldset = '';
       fieldset += '<fieldset> ';
-      fieldset += 'breakpoint: <input type="number" name="breakpoint" value="1920"> ';
       fieldset += 'font-size: <input type="number" name="fontSize" value="30"> ';
+      fieldset += 'breakpoint: <input type="number" name="breakpoint" value="1920"> ';
       fieldset += '<div class="button minus"></div> ';
       fieldset += '</fieldset>';
       $('form').append(fieldset);
